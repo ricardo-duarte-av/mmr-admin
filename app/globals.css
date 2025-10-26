@@ -53,10 +53,14 @@
   }
   
   .media-item {
-    @apply group relative overflow-hidden rounded-lg bg-white shadow-sm transition-all duration-200 hover:shadow-md;
+    @apply relative overflow-hidden rounded-lg bg-white shadow-sm transition-all duration-200 hover:shadow-md;
   }
   
   .media-preview {
-    @apply aspect-square w-full object-cover transition-transform duration-200 group-hover:scale-105;
+    @apply aspect-square w-full object-cover transition-transform duration-200;
+  }
+  
+  .group:hover .media-preview {
+    @apply scale-105;
   }
 }
