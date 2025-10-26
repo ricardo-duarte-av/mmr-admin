@@ -10,7 +10,8 @@ import {
   Grid,
   List,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Database
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
