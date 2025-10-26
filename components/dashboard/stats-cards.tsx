@@ -52,8 +52,8 @@ export function StatsCards() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[...Array(4)].map((_, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[...Array(3)].map((_, i) => (
           <Card key={i}>
             <CardContent className="p-6">
               <LoadingSpinner size="md" />
@@ -66,7 +66,7 @@ export function StatsCards() {
 
   if (error) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="col-span-full">
           <CardContent className="p-6 text-center">
             <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
@@ -113,19 +113,10 @@ export function StatsCards() {
       change: `${formatBytes(thumbnailSize)} thumbnails`,
       changeType: 'positive' as const,
     },
-    {
-      title: 'Server Status',
-      value: health?.healthy ? 'Connected' : 'Disconnected',
-      icon: Activity,
-      color: health?.healthy ? 'text-green-600' : 'text-red-600',
-      bgColor: health?.healthy ? 'bg-green-100' : 'bg-red-100',
-      change: health?.healthy ? 'API accessible' : 'Connection failed',
-      changeType: health?.healthy ? 'positive' as const : 'negative' as const,
-    },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {statsCards.map((card, index) => {
         const Icon = card.icon;
         return (

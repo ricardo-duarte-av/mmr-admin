@@ -170,6 +170,10 @@ class MMRApiClient {
     return this.request<any[]>('/_matrix/media/unstable/admin/datastores');
   }
 
+  async getDatastoreSizeEstimate(datastoreId: string): Promise<any> {
+    return this.request<any>(`/_matrix/media/unstable/admin/datastores/${datastoreId}/size_estimate`);
+  }
+
   async migrateMedia(fromDatastore: string, toDatastore: string, mediaId: string): Promise<void> {
     await this.request<void>(`/_matrix/media/unstable/admin/datastores/${fromDatastore}/transfer_to/${toDatastore}`, {
       method: 'POST',
