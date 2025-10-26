@@ -28,9 +28,10 @@ export function StatsCards() {
         setError(null);
         
         const api = getMMRApi();
-        const [statsData, healthData] = await Promise.all([
+        const [statsData, healthData, datastoresData] = await Promise.all([
           api.getServerStats(),
-          api.getServerHealth()
+          api.getServerHealth(),
+          api.getDatastores()
         ]);
         
         setStats(statsData);
@@ -76,41 +77,49 @@ export function StatsCards() {
     );
   }
 
+  // Extract data from MMR API response
+  const totalMedia = stats?.raw_counts?.total || 0;
+  const totalSize = stats?.raw_bytes?.total || 0;
+  const mediaCount = stats?.raw_counts?.media || 0;
+  const thumbnailCount = stats?.raw_counts?.thumbnails || 0;
+  const mediaSize = stats?.raw_bytes?.media || 0;
+  const thumbnailSize = stats?.raw_bytes?.thumbnails || 0;
+
   const statsCards = [
     {
       title: 'Total Media',
-      value: stats?.totalMedia?.toLocaleString() || '0',
+      value: totalMedia.toLocaleString(),
       icon: Database,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
-      change: '+12%',
+      change: `${mediaCount} media, ${thumbnailCount} thumbnails`,
       changeType: 'positive' as const,
     },
     {
-      title: 'Total Users',
-      value: stats?.totalUsers?.toLocaleString() || '0',
+      title: 'Media Files',
+      value: mediaCount.toLocaleString(),
       icon: Users,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
-      change: '+8%',
+      change: `${formatBytes(mediaSize)}`,
       changeType: 'positive' as const,
     },
     {
       title: 'Storage Used',
-      value: stats ? formatBytes(stats.totalSizeBytes) : '0 B',
+      value: formatBytes(totalSize),
       icon: HardDrive,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
-      change: '+5%',
+      change: `${formatBytes(thumbnailSize)} thumbnails`,
       changeType: 'positive' as const,
     },
     {
-      title: 'Server Health',
-      value: health?.healthy ? 'Healthy' : 'Unhealthy',
+      title: 'Server Status',
+      value: health?.healthy ? 'Connected' : 'Disconnected',
       icon: Activity,
       color: health?.healthy ? 'text-green-600' : 'text-red-600',
       bgColor: health?.healthy ? 'bg-green-100' : 'bg-red-100',
-      change: health?.uptime ? `${Math.floor(health.uptime / 3600)}h uptime` : 'Unknown',
+      change: health?.healthy ? 'API accessible' : 'Connection failed',
       changeType: health?.healthy ? 'positive' as const : 'negative' as const,
     },
   ];

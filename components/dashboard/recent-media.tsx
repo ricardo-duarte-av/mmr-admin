@@ -32,13 +32,30 @@ export function RecentMedia({ onMediaSelect }: RecentMediaProps) {
         setError(null);
         
         const api = getMMRApi();
-        const response = await api.getMediaList({
-          limit: 8,
-          orderBy: 'uploadDate',
-          orderDirection: 'desc',
-        });
+        // Use the uploads endpoint to get recent media
+        const response = await api.getMediaList();
         
-        setMedia(response.media);
+        // Convert the response format to match our MediaFile interface
+        const mediaFiles = Object.entries(response).map(([mxcUri, data]) => ({
+          mediaId: mxcUri,
+          uploadName: data.upload_name || 'Unknown',
+          contentType: data.content_type || 'application/octet-stream',
+          sizeBytes: data.size_bytes || 0,
+          uploadDate: new Date(data.created_ts || Date.now()).toISOString(),
+          userId: data.uploaded_by || 'Unknown',
+          serverName: mxcUri.split('://')[1]?.split('/')[0] || 'Unknown',
+          location: data.datastore_location || '',
+          quarantined: data.quarantined || false,
+          datastoreId: data.datastore_id || '',
+          datastoreIdStr: data.datastore_id || ''
+        }));
+        
+        // Sort by upload date and take the first 8
+        const sortedMedia = mediaFiles
+          .sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime())
+          .slice(0, 8);
+        
+        setMedia(sortedMedia);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load recent media');
       } finally {

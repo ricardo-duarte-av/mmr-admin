@@ -50,21 +50,12 @@ class MMRApiClient {
   }
 
   // Media Management
-  async getMediaList(params: MediaSearchParams = {}): Promise<MediaListResponse> {
-    // Note: MMR doesn't have a direct media list endpoint
-    // We'll need to use the usage endpoint to get media information
-    const searchParams = new URLSearchParams();
+  async getMediaList(params: MediaSearchParams = {}): Promise<any> {
+    // Use the uploads endpoint to get media information
+    const serverName = this.config.baseUrl.split('://')[1].split('/')[0];
+    const endpoint = `/_matrix/media/unstable/admin/usage/${serverName}/uploads`;
     
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        searchParams.append(key, value.toString());
-      }
-    });
-
-    const queryString = searchParams.toString();
-    const endpoint = `/_matrix/media/unstable/admin/usage/${this.config.baseUrl.split('://')[1].split('/')[0]}/uploads${queryString ? `&${queryString}` : ''}`;
-    
-    return this.request<MediaListResponse>(endpoint);
+    return this.request<any>(endpoint);
   }
 
   async getMediaById(mediaId: string): Promise<MediaFile> {
