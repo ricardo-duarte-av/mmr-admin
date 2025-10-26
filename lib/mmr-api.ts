@@ -190,6 +190,49 @@ class MMRApiClient {
     // MMR doesn't have a cache warm endpoint
     throw new Error('Cache warm not supported in MMR');
   }
+
+  // Media Purge Management
+  async purgeRemoteMedia(beforeTimestamp: number): Promise<void> {
+    await this.request<void>(`/_matrix/media/unstable/admin/purge/remote?before_ts=${beforeTimestamp}`, {
+      method: 'POST',
+    });
+  }
+
+  async purgeQuarantinedMedia(): Promise<void> {
+    await this.request<void>('/_matrix/media/unstable/admin/purge/quarantined', {
+      method: 'POST',
+    });
+  }
+
+  async purgeUserMedia(userId: string, beforeTimestamp: number): Promise<void> {
+    await this.request<void>(`/_matrix/media/unstable/admin/purge/user/${encodeURIComponent(userId)}?before_ts=${beforeTimestamp}`, {
+      method: 'POST',
+    });
+  }
+
+  async purgeRoomMedia(roomId: string, beforeTimestamp: number): Promise<void> {
+    await this.request<void>(`/_matrix/media/unstable/admin/purge/room/${encodeURIComponent(roomId)}?before_ts=${beforeTimestamp}`, {
+      method: 'POST',
+    });
+  }
+
+  async purgeServerMedia(serverName: string, beforeTimestamp: number): Promise<void> {
+    await this.request<void>(`/_matrix/media/unstable/admin/purge/server/${encodeURIComponent(serverName)}?before_ts=${beforeTimestamp}`, {
+      method: 'POST',
+    });
+  }
+
+  async purgeOldMedia(beforeTimestamp: number, includeLocal: boolean = false): Promise<void> {
+    await this.request<void>(`/_matrix/media/unstable/admin/purge/old?before_ts=${beforeTimestamp}&include_local=${includeLocal}`, {
+      method: 'POST',
+    });
+  }
+
+  async purgeIndividualMedia(server: string, mediaId: string): Promise<void> {
+    await this.request<void>(`/_matrix/media/unstable/admin/purge/media/${encodeURIComponent(server)}/${encodeURIComponent(mediaId)}`, {
+      method: 'POST',
+    });
+  }
 }
 
 // Create a singleton instance

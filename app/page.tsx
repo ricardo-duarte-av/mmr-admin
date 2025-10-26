@@ -6,6 +6,7 @@ import { StatsCards } from '@/components/dashboard/stats-cards';
 import { DatastoresOverview } from '@/components/dashboard/datastores-overview';
 import { MediaGallery } from '@/components/media/media-gallery';
 import { MediaViewer } from '@/components/media/media-viewer';
+import { MediaPurgeInterface } from '@/components/media/media-purge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MediaFile } from '@/types/mmr';
 import { initializeMMRApi, validateMatrixToken, testMMRConnection } from '@/lib/mmr-api';
@@ -13,6 +14,7 @@ import { isConfigComplete, getMMRConfig, getMatrixConfig } from '@/lib/config';
 
 export default function HomePage() {
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [mediaSubPage, setMediaSubPage] = useState('browse');
   const [selectedMedia, setSelectedMedia] = useState<MediaFile | null>(null);
   const [isConfigured, setIsConfigured] = useState(false);
 
@@ -100,14 +102,36 @@ export default function HomePage() {
 
         {currentPage === 'media' && (
           <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Media Management</h1>
-              <p className="text-gray-600 mt-2">
-                Browse, search, and manage media files
-              </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Media Management</h1>
+                <p className="text-gray-600 mt-2">
+                  Browse, search, and manage media files
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  variant={mediaSubPage === 'browse' ? 'primary' : 'secondary'}
+                  onClick={() => setMediaSubPage('browse')}
+                >
+                  Browse Media
+                </Button>
+                <Button
+                  variant={mediaSubPage === 'purge' ? 'primary' : 'secondary'}
+                  onClick={() => setMediaSubPage('purge')}
+                >
+                  Purge Media
+                </Button>
+              </div>
             </div>
             
-            <MediaGallery onMediaSelect={handleMediaSelect} />
+            {mediaSubPage === 'browse' && (
+              <MediaGallery onMediaSelect={handleMediaSelect} />
+            )}
+            
+            {mediaSubPage === 'purge' && (
+              <MediaPurgeInterface />
+            )}
           </div>
         )}
 
