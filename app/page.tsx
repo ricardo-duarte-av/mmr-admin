@@ -8,6 +8,7 @@ import { MediaGallery } from '@/components/media/media-gallery';
 import { MediaViewer } from '@/components/media/media-viewer';
 import { MediaPurgeInterface } from '@/components/media/media-purge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { MediaFile } from '@/types/mmr';
 import { initializeMMRApi, validateMatrixToken, testMMRConnection } from '@/lib/mmr-api';
 import { isConfigComplete, getMMRConfig, getMatrixConfig } from '@/lib/config';
