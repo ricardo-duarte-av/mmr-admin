@@ -7,6 +7,7 @@ import { DatastoresOverview } from '@/components/dashboard/datastores-overview';
 import { MediaGallery } from '@/components/media/media-gallery';
 import { MediaViewer } from '@/components/media/media-viewer';
 import { MediaPurgeInterface } from '@/components/media/media-purge';
+import { BackgroundTasksInterface } from '@/components/tasks/background-tasks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MediaFile } from '@/types/mmr';
@@ -137,17 +138,8 @@ export default function HomePage() {
         )}
 
 
-        {currentPage === 'settings' && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-              <p className="text-gray-600 mt-2">
-                Configure your MMR Admin interface
-              </p>
-            </div>
-            
-            <ConfigurationPage onConfigured={() => {}} />
-          </div>
+        {currentPage === 'tasks' && (
+          <BackgroundTasksInterface />
         )}
       </main>
 

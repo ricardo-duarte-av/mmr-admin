@@ -249,6 +249,19 @@ class MMRApiClient {
       method: 'POST',
     });
   }
+
+  // Background Tasks Management
+  async getAllTasks(): Promise<any[]> {
+    return this.request<any[]>('/_matrix/media/unstable/admin/tasks/all');
+  }
+
+  async getUnfinishedTasks(): Promise<any[]> {
+    return this.request<any[]>('/_matrix/media/unstable/admin/tasks/unfinished');
+  }
+
+  async getTaskDetails(taskId: number): Promise<any> {
+    return this.request<any>(`/_matrix/media/unstable/admin/task/${taskId}`);
+  }
 }
 
 // Create a singleton instance

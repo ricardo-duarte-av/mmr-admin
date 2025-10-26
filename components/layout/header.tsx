@@ -5,7 +5,7 @@ import {
   Server, 
   Database, 
   Users, 
-  Settings, 
+  Clock, 
   BarChart3,
   Menu,
   X
@@ -21,7 +21,7 @@ interface HeaderProps {
 const navigation = [
   { id: 'dashboard', name: 'Dashboard', icon: BarChart3 },
   { id: 'media', name: 'Media', icon: Database },
-  { id: 'settings', name: 'Settings', icon: Settings },
+  { id: 'tasks', name: 'Tasks', icon: Clock },
 ];
 
 export function Header({ currentPage, onPageChange }: HeaderProps) {
