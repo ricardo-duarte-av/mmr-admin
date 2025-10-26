@@ -1,16 +1,6 @@
-export interface MMRConfig {
-  baseUrl: string;
-  apiKey: string;
-}
-
-export interface MatrixConfig {
+export interface AppConfig {
   homeserverUrl: string;
   accessToken: string;
-}
-
-export interface AppConfig {
-  mmr: MMRConfig;
-  matrix: MatrixConfig;
 }
 
 // Load configuration from config.json
@@ -23,34 +13,32 @@ export function loadConfig(): AppConfig {
   } catch (error) {
     console.warn('Could not load config.json, using defaults');
     return {
-      mmr: {
-        baseUrl: '',
-        apiKey: ''
-      },
-      matrix: {
-        homeserverUrl: '',
-        accessToken: ''
-      }
+      homeserverUrl: '',
+      accessToken: ''
     };
   }
 }
 
-// Get MMR configuration
-export function getMMRConfig(): MMRConfig {
+// Get MMR configuration (derived from main config)
+export function getMMRConfig(): { baseUrl: string; apiKey: string } {
   const config = loadConfig();
-  return config.mmr;
+  return {
+    baseUrl: config.homeserverUrl,
+    apiKey: config.accessToken
+  };
 }
 
-// Get Matrix configuration
-export function getMatrixConfig(): MatrixConfig {
+// Get Matrix configuration (same as main config)
+export function getMatrixConfig(): { homeserverUrl: string; accessToken: string } {
   const config = loadConfig();
-  return config.matrix;
+  return {
+    homeserverUrl: config.homeserverUrl,
+    accessToken: config.accessToken
+  };
 }
 
 // Check if configuration is complete
 export function isConfigComplete(): boolean {
-  const mmrConfig = getMMRConfig();
-  const matrixConfig = getMatrixConfig();
-  
-  return !!(mmrConfig.baseUrl && mmrConfig.apiKey && matrixConfig.homeserverUrl && matrixConfig.accessToken);
+  const config = loadConfig();
+  return !!(config.homeserverUrl && config.accessToken);
 }
