@@ -27,18 +27,29 @@ interface PurgeResult {
 export function MediaPurgeInterface() {
   const [loading, setLoading] = useState<string | null>(null);
   const [results, setResults] = useState<PurgeResult[]>([]);
-  const [beforeTimestamp, setBeforeTimestamp] = useState<string>('');
+  const [beforeDateTime, setBeforeDateTime] = useState<string>('');
   const [includeLocal, setIncludeLocal] = useState<boolean>(false);
 
   const formatTimestamp = (date: Date): string => {
     return date.getTime().toString();
   };
 
+  const getCurrentDateTime = (): string => {
+    const now = new Date();
+    // Format as YYYY-MM-DDTHH:MM for datetime-local input
+    return now.toISOString().slice(0, 16);
+  };
+
+  const getDateTime30DaysAgo = (): string => {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    return thirtyDaysAgo.toISOString().slice(0, 16);
+  };
+
   const handlePurgeRemote = async () => {
-    if (!beforeTimestamp) {
+    if (!beforeDateTime) {
       setResults(prev => [...prev, {
         success: false,
-        message: 'Please specify a timestamp for remote media purge'
+        message: 'Please specify a date and time for remote media purge'
       }]);
       return;
     }
@@ -46,7 +57,8 @@ export function MediaPurgeInterface() {
     setLoading('remote');
     try {
       const api = getMMRApi();
-      await api.purgeRemoteMedia(parseInt(beforeTimestamp));
+      const timestamp = new Date(beforeDateTime).getTime();
+      await api.purgeRemoteMedia(timestamp);
       setResults(prev => [...prev, {
         success: true,
         message: 'Remote media purge completed successfully'
@@ -81,11 +93,11 @@ export function MediaPurgeInterface() {
   };
 
   const handlePurgeOld = async () => {
-    const timestamp = beforeTimestamp || formatTimestamp(new Date());
+    const timestamp = beforeDateTime ? new Date(beforeDateTime).getTime() : Date.now();
     setLoading('old');
     try {
       const api = getMMRApi();
-      await api.purgeOldMedia(parseInt(timestamp), includeLocal);
+      await api.purgeOldMedia(timestamp, includeLocal);
       setResults(prev => [...prev, {
         success: true,
         message: `Old media purge completed successfully (include_local: ${includeLocal})`
@@ -178,37 +190,36 @@ export function MediaPurgeInterface() {
         </p>
       </div>
 
-      {/* Timestamp Configuration */}
+      {/* Date/Time Configuration */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
             <Calendar className="h-5 w-5 mr-2" />
-            Timestamp Configuration
+            Date & Time Configuration
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Before Timestamp (milliseconds)
+              Before Date & Time
             </label>
             <Input
-              type="number"
-              value={beforeTimestamp}
-              onChange={(e) => setBeforeTimestamp(e.target.value)}
-              placeholder="1234567890000"
+              type="datetime-local"
+              value={beforeDateTime}
+              onChange={(e) => setBeforeDateTime(e.target.value)}
               className="w-full"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Leave empty to use current timestamp. Use{' '}
+              Leave empty to use current time. Use{' '}
               <button
-                onClick={() => setBeforeTimestamp(formatTimestamp(new Date()))}
+                onClick={() => setBeforeDateTime(getCurrentDateTime())}
                 className="text-primary-600 hover:underline"
               >
                 current time
               </button>
               {' '}or{' '}
               <button
-                onClick={() => setBeforeTimestamp(formatTimestamp(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)))}
+                onClick={() => setBeforeDateTime(getDateTime30DaysAgo())}
                 className="text-primary-600 hover:underline"
               >
                 30 days ago
@@ -256,7 +267,7 @@ export function MediaPurgeInterface() {
                 
                 <Button
                   onClick={action.handler}
-                  disabled={loading === action.id || (action.requiresTimestamp && !beforeTimestamp)}
+                  disabled={loading === action.id || (action.requiresTimestamp && !beforeDateTime)}
                   variant="danger"
                   className="w-full"
                 >
@@ -301,14 +312,14 @@ export function MediaPurgeInterface() {
                 setLoading(target.id);
                 try {
                   const api = getMMRApi();
-                  const timestamp = beforeTimestamp || formatTimestamp(new Date());
+                  const timestamp = beforeDateTime ? new Date(beforeDateTime).getTime() : Date.now();
                   
                   if (target.endpoint === 'user') {
-                    await api.purgeUserMedia(inputValue.trim(), parseInt(timestamp));
+                    await api.purgeUserMedia(inputValue.trim(), timestamp);
                   } else if (target.endpoint === 'room') {
-                    await api.purgeRoomMedia(inputValue.trim(), parseInt(timestamp));
+                    await api.purgeRoomMedia(inputValue.trim(), timestamp);
                   } else if (target.endpoint === 'server') {
-                    await api.purgeServerMedia(inputValue.trim(), parseInt(timestamp));
+                    await api.purgeServerMedia(inputValue.trim(), timestamp);
                   }
                   
                   setResults(prev => [...prev, {
