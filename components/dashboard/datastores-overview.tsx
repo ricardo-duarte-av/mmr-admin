@@ -187,55 +187,55 @@ export function DatastoresOverview() {
                 {/* Datastore Stats */}
                 {datastore.sizeEstimate && (
                   <div className="p-4 bg-white">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 gap-6">
                       <div className="text-center">
-                        <div className="flex items-center justify-center mb-1">
-                          <FileText className="h-4 w-4 text-blue-500 mr-1" />
-                          <span className="text-sm font-medium text-gray-900">Media Files</span>
+                        <div className="flex items-center justify-center mb-2">
+                          <FileText className="h-5 w-5 text-blue-500 mr-2" />
+                          <span className="text-base font-semibold text-gray-900">Media Files</span>
                         </div>
-                        <p className="text-lg font-bold text-gray-900">
-                          {datastore.sizeEstimate.media_affected.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-2xl font-bold text-gray-900 mb-1">
                           {formatBytes(datastore.sizeEstimate.media_bytes)}
                         </p>
+                        <p className="text-sm text-gray-500">
+                          {datastore.sizeEstimate.media_affected.toLocaleString()} files
+                        </p>
                       </div>
                       
                       <div className="text-center">
-                        <div className="flex items-center justify-center mb-1">
-                          <Image className="h-4 w-4 text-green-500 mr-1" />
-                          <span className="text-sm font-medium text-gray-900">Thumbnails</span>
+                        <div className="flex items-center justify-center mb-2">
+                          <Image className="h-5 w-5 text-green-500 mr-2" />
+                          <span className="text-base font-semibold text-gray-900">Thumbnails</span>
                         </div>
-                        <p className="text-lg font-bold text-gray-900">
-                          {datastore.sizeEstimate.thumbnails_affected.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-2xl font-bold text-gray-900 mb-1">
                           {formatBytes(datastore.sizeEstimate.thumbnail_bytes)}
                         </p>
+                        <p className="text-sm text-gray-500">
+                          {datastore.sizeEstimate.thumbnails_affected.toLocaleString()} files
+                        </p>
                       </div>
                       
                       <div className="text-center">
-                        <div className="flex items-center justify-center mb-1">
-                          <Database className="h-4 w-4 text-purple-500 mr-1" />
-                          <span className="text-sm font-medium text-gray-900">Total Files</span>
+                        <div className="flex items-center justify-center mb-2">
+                          <Database className="h-5 w-5 text-purple-500 mr-2" />
+                          <span className="text-base font-semibold text-gray-900">Total Storage</span>
                         </div>
-                        <p className="text-lg font-bold text-gray-900">
-                          {datastore.sizeEstimate.total_hashes_affected.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-2xl font-bold text-gray-900 mb-1">
                           {formatBytes(datastore.sizeEstimate.total_bytes)}
                         </p>
+                        <p className="text-sm text-gray-500">
+                          {datastore.sizeEstimate.total_hashes_affected.toLocaleString()} files
+                        </p>
                       </div>
                       
                       <div className="text-center">
-                        <div className="flex items-center justify-center mb-1">
-                          <Activity className="h-4 w-4 text-orange-500 mr-1" />
-                          <span className="text-sm font-medium text-gray-900">Unique Hashes</span>
+                        <div className="flex items-center justify-center mb-2">
+                          <Activity className="h-5 w-5 text-orange-500 mr-2" />
+                          <span className="text-base font-semibold text-gray-900">Unique Hashes</span>
                         </div>
-                        <p className="text-lg font-bold text-gray-900">
+                        <p className="text-2xl font-bold text-gray-900 mb-1">
                           {(datastore.sizeEstimate.media_hashes_affected + datastore.sizeEstimate.thumbnail_hashes_affected).toLocaleString()}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm text-gray-500">
                           {datastore.sizeEstimate.media_hashes_affected} media + {datastore.sizeEstimate.thumbnail_hashes_affected} thumbnails
                         </p>
                       </div>

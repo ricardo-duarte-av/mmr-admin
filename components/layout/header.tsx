@@ -21,8 +21,6 @@ interface HeaderProps {
 const navigation = [
   { id: 'dashboard', name: 'Dashboard', icon: BarChart3 },
   { id: 'media', name: 'Media', icon: Database },
-  { id: 'users', name: 'Users', icon: Users },
-  { id: 'server', name: 'Server', icon: Server },
   { id: 'settings', name: 'Settings', icon: Settings },
 ];
 

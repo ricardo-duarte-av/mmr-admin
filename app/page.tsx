@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/header';
 import { StatsCards } from '@/components/dashboard/stats-cards';
-import { RecentMedia } from '@/components/dashboard/recent-media';
 import { DatastoresOverview } from '@/components/dashboard/datastores-overview';
 import { MediaGallery } from '@/components/media/media-gallery';
 import { MediaViewer } from '@/components/media/media-viewer';
@@ -95,60 +94,7 @@ export default function HomePage() {
             
             <StatsCards />
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <RecentMedia onMediaSelect={handleMediaSelect} />
-              <DatastoresOverview />
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <button
-                    onClick={() => setCurrentPage('media')}
-                    className="w-full text-left p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <h3 className="font-medium text-gray-900">Browse Media</h3>
-                    <p className="text-sm text-gray-500">View and manage all media files</p>
-                  </button>
-                  
-                  <button
-                    onClick={() => setCurrentPage('users')}
-                    className="w-full text-left p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <h3 className="font-medium text-gray-900">User Management</h3>
-                    <p className="text-sm text-gray-500">Monitor user activity and storage usage</p>
-                  </button>
-                  
-                  <button
-                    onClick={() => setCurrentPage('server')}
-                    className="w-full text-left p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <h3 className="font-medium text-gray-900">Server Status</h3>
-                    <p className="text-sm text-gray-500">View server health and performance</p>
-                  </button>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>About MMR Admin</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
-                    MMR Admin provides a modern interface for managing your Matrix Media Repo instance.
-                  </p>
-                  <div className="space-y-2 text-xs text-gray-500">
-                    <p>• View and manage media files</p>
-                    <p>• Monitor storage usage and datastores</p>
-                    <p>• Quarantine and purge content</p>
-                    <p>• Track user activity</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <DatastoresOverview />
           </div>
         )}
 
@@ -165,39 +111,6 @@ export default function HomePage() {
           </div>
         )}
 
-        {currentPage === 'users' && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-              <p className="text-gray-600 mt-2">
-                Monitor user activity and storage usage
-              </p>
-            </div>
-            
-            <Card>
-              <CardContent className="p-8 text-center">
-                <p className="text-gray-500">User management features coming soon...</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {currentPage === 'server' && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Server Status</h1>
-              <p className="text-gray-600 mt-2">
-                Monitor server health and performance
-              </p>
-            </div>
-            
-            <Card>
-              <CardContent className="p-8 text-center">
-                <p className="text-gray-500">Server monitoring features coming soon...</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         {currentPage === 'settings' && (
           <div className="space-y-6">
