@@ -42,21 +42,13 @@ export function MediaGallery({ onMediaSelect }: MediaGalleryProps) {
       setError(null);
       
       const api = getMMRApi();
-      const params: MediaSearchParams = {
-        limit: itemsPerPage,
-        offset: (page - 1) * itemsPerPage,
-        orderBy: 'uploadDate',
-        orderDirection: 'desc',
-      };
-
-      if (search) {
-        // Note: MMR API doesn't have text search, so we'll filter client-side
-        // In a real implementation, you might want to implement server-side search
-      }
-
-      const response = await api.getMediaList(params);
-      setMedia(response.media);
-      setTotalPages(Math.ceil(response.total / itemsPerPage));
+      // Use the server usage endpoint instead of uploads to avoid massive responses
+      const response = await api.getMediaList();
+      
+      // The server usage endpoint returns summary data, not individual media files
+      // We'll show a message explaining the limitation and provide alternative options
+      setMedia([]);
+      setTotalPages(0);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load media');
     } finally {
@@ -387,8 +379,16 @@ export function MediaGallery({ onMediaSelect }: MediaGalleryProps) {
       {media.length === 0 && !loading && (
         <div className="text-center py-12">
           <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No media found</h3>
-          <p className="text-gray-500">Try adjusting your search criteria or upload some media.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Media browsing limited</h3>
+          <p className="text-gray-500 mb-4">
+            Individual media browsing is disabled to prevent loading massive datasets.
+          </p>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 max-w-md mx-auto">
+            <p className="text-sm text-yellow-800">
+              <strong>Note:</strong> The MMR uploads endpoint can return multiple megabytes of data.
+              Use the Purge Media tab for bulk operations or query specific MXC URIs.
+            </p>
+          </div>
         </div>
       )}
     </div>

@@ -51,9 +51,25 @@ class MMRApiClient {
 
   // Media Management
   async getMediaList(params: MediaSearchParams = {}): Promise<any> {
-    // Use the uploads endpoint to get media information
+    // Use the server usage endpoint instead of uploads to avoid massive responses
     const serverName = this.config.baseUrl.split('://')[1].split('/')[0];
-    const endpoint = `/_matrix/media/unstable/admin/usage/${serverName}/uploads`;
+    const endpoint = `/_matrix/media/unstable/admin/usage/${serverName}`;
+    
+    return this.request<any>(endpoint);
+  }
+
+  async getMediaByMxc(mxcUri: string): Promise<any> {
+    // Get specific media by MXC URI using the uploads endpoint with parameter
+    const serverName = this.config.baseUrl.split('://')[1].split('/')[0];
+    const endpoint = `/_matrix/media/unstable/admin/usage/${serverName}/uploads?mxc=${encodeURIComponent(mxcUri)}`;
+    
+    return this.request<any>(endpoint);
+  }
+
+  async getUserStats(): Promise<any> {
+    // Get user statistics instead of individual media
+    const serverName = this.config.baseUrl.split('://')[1].split('/')[0];
+    const endpoint = `/_matrix/media/unstable/admin/usage/${serverName}/users-stats`;
     
     return this.request<any>(endpoint);
   }
