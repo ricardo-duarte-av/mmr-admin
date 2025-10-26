@@ -10,6 +10,7 @@ import {
   QuarantineInfo,
   APIError 
 } from '@/types/mmr';
+import { getMMRConfig, getMatrixConfig } from '@/lib/config';
 
 class MMRApiClient {
   private config: MMRConfig;
@@ -22,10 +23,9 @@ class MMRApiClient {
     endpoint: string, 
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.config.baseUrl}${endpoint}`;
+    const url = `${this.config.baseUrl}${endpoint}${endpoint.includes('?') ? '&' : '?'}access_token=${this.config.apiKey}`;
     
     const defaultHeaders = {
-      'Authorization': `Bearer ${this.config.apiKey}`,
       'Content-Type': 'application/json',
     };
 
@@ -51,6 +51,8 @@ class MMRApiClient {
 
   // Media Management
   async getMediaList(params: MediaSearchParams = {}): Promise<MediaListResponse> {
+    // Note: MMR doesn't have a direct media list endpoint
+    // We'll need to use the usage endpoint to get media information
     const searchParams = new URLSearchParams();
     
     Object.entries(params).forEach(([key, value]) => {
@@ -60,27 +62,29 @@ class MMRApiClient {
     });
 
     const queryString = searchParams.toString();
-    const endpoint = `/api/v1/media${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/_matrix/media/unstable/admin/usage/${this.config.baseUrl.split('://')[1].split('/')[0]}/uploads${queryString ? `&${queryString}` : ''}`;
     
     return this.request<MediaListResponse>(endpoint);
   }
 
   async getMediaById(mediaId: string): Promise<MediaFile> {
-    return this.request<MediaFile>(`/api/v1/media/${mediaId}`);
+    // Note: MMR doesn't have a direct media by ID endpoint
+    // This would need to be implemented differently
+    throw new Error('getMediaById not implemented - MMR doesn\'t have this endpoint');
   }
 
   async deleteMedia(mediaId: string): Promise<void> {
-    await this.request<void>(`/api/v1/media/${mediaId}`, {
-      method: 'DELETE',
+    // Extract server and media ID from MXC URI or use direct format
+    const endpoint = `/_matrix/media/unstable/admin/purge/media/${mediaId}`;
+    await this.request<void>(endpoint, {
+      method: 'POST',
     });
   }
 
   async downloadMedia(mediaId: string): Promise<Blob> {
-    const response = await fetch(`${this.config.baseUrl}/api/v1/media/${mediaId}/download`, {
-      headers: {
-        'Authorization': `Bearer ${this.config.apiKey}`,
-      },
-    });
+    // MMR doesn't have a direct download endpoint for admin
+    // Media is typically accessed via the normal media endpoint
+    const response = await fetch(`${this.config.baseUrl}/_matrix/media/r0/download/${mediaId}?access_token=${this.config.apiKey}`);
 
     if (!response.ok) {
       throw new Error(`Failed to download media: ${response.statusText}`);
@@ -90,98 +94,178 @@ class MMRApiClient {
   }
 
   async getMediaUrl(mediaId: string): string {
-    return `${this.config.baseUrl}/api/v1/media/${mediaId}/download?access_token=${this.config.apiKey}`;
+    return `${this.config.baseUrl}/_matrix/media/r0/download/${mediaId}?access_token=${this.config.apiKey}`;
   }
 
   // User Management
   async getUserMediaUsage(userId: string): Promise<UserMediaUsage> {
-    return this.request<UserMediaUsage>(`/api/v1/users/${userId}/media`);
+    const serverName = this.config.baseUrl.split('://')[1].split('/')[0];
+    return this.request<UserMediaUsage>(`/_matrix/media/unstable/admin/usage/${serverName}/users?user_id=${encodeURIComponent(userId)}`);
   }
 
   async getAllUsersMediaUsage(): Promise<UserMediaUsage[]> {
-    return this.request<UserMediaUsage[]>('/api/v1/users/media');
+    const serverName = this.config.baseUrl.split('://')[1].split('/')[0];
+    return this.request<UserMediaUsage[]>(`/_matrix/media/unstable/admin/usage/${serverName}/users`);
   }
 
   async deleteUserMedia(userId: string): Promise<void> {
-    await this.request<void>(`/api/v1/users/${userId}/media`, {
-      method: 'DELETE',
+    await this.request<void>(`/_matrix/media/unstable/admin/purge/user/${encodeURIComponent(userId)}`, {
+      method: 'POST',
     });
   }
 
   // Server Management
   async getServerStats(): Promise<ServerStats> {
-    return this.request<ServerStats>('/api/v1/server/stats');
+    const serverName = this.config.baseUrl.split('://')[1].split('/')[0];
+    return this.request<ServerStats>(`/_matrix/media/unstable/admin/usage/${serverName}`);
   }
 
   async getServerHealth(): Promise<ServerHealth> {
-    return this.request<ServerHealth>('/api/v1/server/health');
+    // MMR doesn't have a health endpoint, so we'll use datastores as a connectivity test
+    try {
+      const datastores = await this.getDatastores();
+      return {
+        healthy: true,
+        uptime: 0, // MMR doesn't provide uptime
+        version: 'unknown', // MMR doesn't provide version
+        datastores: datastores.reduce((acc, ds, index) => {
+          acc[index.toString()] = {
+            healthy: true,
+            lastCheck: new Date().toISOString()
+          };
+          return acc;
+        }, {} as { [key: string]: { healthy: boolean; lastCheck: string } })
+      };
+    } catch (error) {
+      return {
+        healthy: false,
+        uptime: 0,
+        version: 'unknown',
+        datastores: {}
+      };
+    }
   }
 
   async getCacheStats(): Promise<CacheStats> {
-    return this.request<CacheStats>('/api/v1/server/cache');
+    // MMR doesn't have a cache stats endpoint
+    return {
+      hitRate: 0,
+      missRate: 0,
+      totalRequests: 0,
+      cacheSize: 0,
+      maxCacheSize: 0
+    };
   }
 
   // Quarantine Management
   async quarantineMedia(mediaId: string, reason: string): Promise<void> {
-    await this.request<void>(`/api/v1/media/${mediaId}/quarantine`, {
+    await this.request<void>(`/_matrix/media/unstable/admin/quarantine/media/${mediaId}`, {
       method: 'POST',
-      body: JSON.stringify({ reason }),
     });
   }
 
   async unquarantineMedia(mediaId: string): Promise<void> {
-    await this.request<void>(`/api/v1/media/${mediaId}/quarantine`, {
-      method: 'DELETE',
-    });
+    // MMR doesn't have an unquarantine endpoint
+    throw new Error('Unquarantine not supported in MMR');
   }
 
   async getQuarantinedMedia(): Promise<QuarantineInfo[]> {
-    return this.request<QuarantineInfo[]>('/api/v1/quarantine');
+    // MMR doesn't have a list quarantined media endpoint
+    return [];
   }
 
   // Datastore Management
   async getDatastores(): Promise<any[]> {
-    return this.request<any[]>('/api/v1/datastores');
+    return this.request<any[]>('/_matrix/media/unstable/admin/datastores');
   }
 
   async migrateMedia(fromDatastore: string, toDatastore: string, mediaId: string): Promise<void> {
-    await this.request<void>(`/api/v1/datastores/migrate`, {
+    await this.request<void>(`/_matrix/media/unstable/admin/datastores/${fromDatastore}/transfer_to/${toDatastore}`, {
       method: 'POST',
-      body: JSON.stringify({
-        fromDatastore,
-        toDatastore,
-        mediaId,
-      }),
     });
   }
 
   // Cache Management
   async clearCache(): Promise<void> {
-    await this.request<void>('/api/v1/cache/clear', {
-      method: 'POST',
-    });
+    // MMR doesn't have a cache clear endpoint
+    throw new Error('Cache clear not supported in MMR');
   }
 
   async warmCache(mediaId: string): Promise<void> {
-    await this.request<void>(`/api/v1/cache/warm/${mediaId}`, {
-      method: 'POST',
-    });
+    // MMR doesn't have a cache warm endpoint
+    throw new Error('Cache warm not supported in MMR');
   }
 }
 
 // Create a singleton instance
 let apiClient: MMRApiClient | null = null;
 
-export function initializeMMRApi(config: MMRConfig): MMRApiClient {
-  apiClient = new MMRApiClient(config);
+export function initializeMMRApi(config?: MMRConfig): MMRApiClient {
+  const finalConfig = config || getMMRConfig();
+  apiClient = new MMRApiClient(finalConfig);
   return apiClient;
 }
 
 export function getMMRApi(): MMRApiClient {
   if (!apiClient) {
-    throw new Error('MMR API not initialized. Call initializeMMRApi first.');
+    // Try to initialize with config file
+    try {
+      return initializeMMRApi();
+    } catch (error) {
+      throw new Error('MMR API not initialized and no config file found. Call initializeMMRApi first.');
+    }
   }
   return apiClient;
+}
+
+// Validate Matrix access token using whoami endpoint
+export async function validateMatrixToken(homeserverUrl: string, accessToken: string): Promise<{ valid: boolean; user?: any; error?: string }> {
+  try {
+    const response = await fetch(`${homeserverUrl}/_matrix/client/r0/account/whoami`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      return {
+        valid: false,
+        error: `HTTP ${response.status}: ${response.statusText}`
+      };
+    }
+
+    const user = await response.json();
+    return {
+      valid: true,
+      user
+    };
+  } catch (error) {
+    return {
+      valid: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+// Test MMR connectivity using datastores endpoint
+export async function testMMRConnection(baseUrl: string, accessToken: string): Promise<{ valid: boolean; error?: string }> {
+  try {
+    const response = await fetch(`${baseUrl}/_matrix/media/unstable/admin/datastores?access_token=${accessToken}`);
+
+    if (!response.ok) {
+      return {
+        valid: false,
+        error: `HTTP ${response.status}: ${response.statusText}`
+      };
+    }
+
+    return { valid: true };
+  } catch (error) {
+    return {
+      valid: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
 }
 
 export { MMRApiClient };

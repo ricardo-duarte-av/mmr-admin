@@ -1,0 +1,10 @@
+{
+  "mmr": {
+    "baseUrl": "https://media.yourdomain.com",
+    "apiKey": "your-matrix-access-token-here"
+  },
+  "matrix": {
+    "homeserverUrl": "https://yourdomain.com",
+    "accessToken": "your-matrix-access-token-here"
+  }
+}

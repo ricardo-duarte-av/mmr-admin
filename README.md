@@ -88,13 +88,33 @@ A modern, elegant, and reactive web interface for managing Matrix Media Repo (MM
    - Enter your API key
    - Click "Save Configuration"
 
-### Environment Variables (Optional)
+### Configuration File (Recommended)
+
+Create a `config.json` file in the project root:
+
+```json
+{
+  "mmr": {
+    "baseUrl": "https://media.yourdomain.com",
+    "apiKey": "your-matrix-access-token-here"
+  },
+  "matrix": {
+    "homeserverUrl": "https://yourdomain.com",
+    "accessToken": "your-matrix-access-token-here"
+  }
+}
+```
+
+**Note**: The same access token is used for both MMR and Matrix API calls. The token will be validated using the Matrix `whoami` endpoint before attempting MMR operations.
+
+### Environment Variables (Alternative)
 
 Create a `.env.local` file for default configuration:
 
 ```env
 NEXT_PUBLIC_MMR_BASE_URL=https://media.yourdomain.com
-NEXT_PUBLIC_MMR_API_KEY=your-api-key
+NEXT_PUBLIC_MMR_API_KEY=your-matrix-access-token
+NEXT_PUBLIC_MATRIX_HOMESERVER_URL=https://yourdomain.com
 ```
 
 ## 📖 Usage

@@ -8,7 +8,8 @@ import { MediaGallery } from '@/components/media/media-gallery';
 import { MediaViewer } from '@/components/media/media-viewer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MediaFile } from '@/types/mmr';
-import { initializeMMRApi } from '@/lib/mmr-api';
+import { initializeMMRApi, validateMatrixToken, testMMRConnection } from '@/lib/mmr-api';
+import { isConfigComplete, getMMRConfig, getMatrixConfig } from '@/lib/config';
 
 export default function HomePage() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -16,17 +17,43 @@ export default function HomePage() {
   const [isConfigured, setIsConfigured] = useState(false);
 
   useEffect(() => {
-    // Check if MMR API is configured
-    const checkConfiguration = () => {
-      const baseUrl = localStorage.getItem('mmr_base_url');
-      const apiKey = localStorage.getItem('mmr_api_key');
-      
-      if (baseUrl && apiKey) {
+    // Check if configuration is complete and valid
+    const checkConfiguration = async () => {
+      if (isConfigComplete()) {
         try {
-          initializeMMRApi({ baseUrl, apiKey });
-          setIsConfigured(true);
+          // Validate Matrix token first
+          const matrixConfig = getMatrixConfig();
+          const matrixValidation = await validateMatrixToken(matrixConfig.homeserverUrl, matrixConfig.accessToken);
+          
+          if (matrixValidation.valid) {
+            // Test MMR connection
+            const mmrConfig = getMMRConfig();
+            const mmrValidation = await testMMRConnection(mmrConfig.baseUrl, mmrConfig.apiKey);
+            
+            if (mmrValidation.valid) {
+              initializeMMRApi();
+              setIsConfigured(true);
+            } else {
+              console.error('MMR connection failed:', mmrValidation.error);
+            }
+          } else {
+            console.error('Matrix token validation failed:', matrixValidation.error);
+          }
         } catch (error) {
-          console.error('Failed to initialize MMR API:', error);
+          console.error('Configuration validation failed:', error);
+        }
+      } else {
+        // Fallback to localStorage for manual configuration
+        const baseUrl = localStorage.getItem('mmr_base_url');
+        const apiKey = localStorage.getItem('mmr_api_key');
+        
+        if (baseUrl && apiKey) {
+          try {
+            initializeMMRApi({ baseUrl, apiKey });
+            setIsConfigured(true);
+          } catch (error) {
+            console.error('Failed to initialize MMR API:', error);
+          }
         }
       }
     };
@@ -179,11 +206,13 @@ export default function HomePage() {
 function ConfigurationPage({ onConfigured }: { onConfigured: () => void }) {
   const [baseUrl, setBaseUrl] = useState('');
   const [apiKey, setApiKey] = useState('');
+  const [homeserverUrl, setHomeserverUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [validationStep, setValidationStep] = useState<'matrix' | 'mmr' | 'complete'>('matrix');
 
   const handleSave = async () => {
-    if (!baseUrl || !apiKey) {
+    if (!baseUrl || !apiKey || !homeserverUrl) {
       setError('Please fill in all fields');
       return;
     }
@@ -192,27 +221,34 @@ function ConfigurationPage({ onConfigured }: { onConfigured: () => void }) {
     setError(null);
 
     try {
-      // Test the connection
-      const response = await fetch(`${baseUrl}/api/v1/server/health`, {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      // Step 1: Validate Matrix token using whoami endpoint
+      setValidationStep('matrix');
+      const matrixValidation = await validateMatrixToken(homeserverUrl, apiKey);
+      
+      if (!matrixValidation.valid) {
+        throw new Error(`Matrix token validation failed: ${matrixValidation.error}`);
       }
 
-      // Save configuration
+      // Step 2: Test MMR connection
+      setValidationStep('mmr');
+      const mmrValidation = await testMMRConnection(baseUrl, apiKey);
+      
+      if (!mmrValidation.valid) {
+        throw new Error(`MMR connection failed: ${mmrValidation.error}`);
+      }
+
+      // Step 3: Save configuration
+      setValidationStep('complete');
       localStorage.setItem('mmr_base_url', baseUrl);
       localStorage.setItem('mmr_api_key', apiKey);
+      localStorage.setItem('matrix_homeserver_url', homeserverUrl);
       
       // Initialize API client
       initializeMMRApi({ baseUrl, apiKey });
       
       onConfigured();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to connect to MMR API');
+      setError(err instanceof Error ? err.message : 'Configuration failed');
     } finally {
       setLoading(false);
     }
@@ -222,9 +258,22 @@ function ConfigurationPage({ onConfigured }: { onConfigured: () => void }) {
     <div className="max-w-md mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>Configure MMR API</CardTitle>
+          <CardTitle>Configure MMR Admin</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Matrix Homeserver URL
+            </label>
+            <input
+              type="url"
+              value={homeserverUrl}
+              onChange={(e) => setHomeserverUrl(e.target.value)}
+              placeholder="https://yourdomain.com"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               MMR Base URL
@@ -233,26 +282,37 @@ function ConfigurationPage({ onConfigured }: { onConfigured: () => void }) {
               type="url"
               value={baseUrl}
               onChange={(e) => setBaseUrl(e.target.value)}
-              placeholder="https://your-mmr-instance.com"
+              placeholder="https://media.yourdomain.com"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              API Key
+              Matrix Access Token
             </label>
             <input
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Your MMR API key"
+              placeholder="Your Matrix access token"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              This token will be validated using the Matrix whoami endpoint
+            </p>
           </div>
           
           {error && (
             <div className="text-red-600 text-sm">{error}</div>
+          )}
+          
+          {loading && (
+            <div className="text-sm text-gray-600">
+              {validationStep === 'matrix' && 'Validating Matrix token...'}
+              {validationStep === 'mmr' && 'Testing MMR connection...'}
+              {validationStep === 'complete' && 'Saving configuration...'}
+            </div>
           )}
           
           <button
@@ -260,7 +320,7 @@ function ConfigurationPage({ onConfigured }: { onConfigured: () => void }) {
             disabled={loading}
             className="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Connecting...' : 'Save Configuration'}
+            {loading ? 'Validating...' : 'Save Configuration'}
           </button>
         </CardContent>
       </Card>
